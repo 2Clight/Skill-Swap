@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const [userDetails, setUserDetails] = useState(null);
@@ -118,7 +119,11 @@ const Dashboard = () => {
             onChange={handleProfilePictureUpload}
           />
         </div>
-
+        <div className="mt-4">
+          <Link to="/certificate" className="text-teal-400 hover:underline">
+            Upload Certificate
+          </Link>
+        </div>
         {/* User Details */}
         <div className="space-y-4">
           <div>

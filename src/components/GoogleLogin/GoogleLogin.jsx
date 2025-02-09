@@ -23,8 +23,11 @@ const GoogleLogin = () => {
       // Check if the user profile is complete
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists() && userDoc.data().isProfileComplete) {
+      if (userDoc.data().role === 'admin') {
+        // If admin, navigate to Admin Dashboard
+        navigate('/AdminDashboard');
+      }
+      else if (userDoc.exists() && userDoc.data().isProfileComplete) {
         // If profile is completed, navigate to the dashboard
         navigate('/dashboard');
       } else {

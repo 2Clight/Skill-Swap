@@ -53,8 +53,10 @@ const GetStarted = () => {
 
         if (docSnap.exists()) {
           const userData = docSnap.data();
-
-          if (userData.isProfileComplete) {
+          if (userData.role === 'admin'){
+            navigate('/AdminDashboard');
+          }
+          else if (userData.isProfileComplete) {
             navigate('/Dashboard'); // Redirect to Dashboard if profile is complete
           } else {
             navigate('/ProfileCompletion'); // Redirect to Profile Completion if not complete
