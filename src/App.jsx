@@ -8,6 +8,7 @@ import AdminDashboard from './components/AdminDashboard/AdminDashboard';  // Imp
 import Certificate from './components/Certificate/Certificate';  // Import Certificate
 import WaitingPage from './components/WaitingPage/WaitingPage';  // Import WaitingPage
 import HomePage from './components/HomePage/HomePage';  // Import HomePage
+import ChatPage from './components/ChatPage/ChatPage';  // Import ChatPage
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
         <Route path="/Certificate" element={<Certificate />} /> 
         <Route path="/WaitingPage" element={<WaitingPage />} /> 
         <Route path="/HomePage" element={<HomePage />} /> 
+        <Route path="//chat/:chatId" element={<ChatPage />} /> 
       </Routes>
     </Router>
   );

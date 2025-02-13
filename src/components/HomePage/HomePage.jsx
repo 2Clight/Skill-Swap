@@ -4,16 +4,19 @@ import { Button } from "../../components/ui/button";
 import { Star } from "lucide-react";
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
   const [userData, setUserData] = useState(null);
   const [recommendedUsers, setRecommendedUsers] = useState([]);
   const auth = getAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
+
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
 
@@ -25,7 +28,7 @@ const HomePage = () => {
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
   const fetchRecommendedUsers = async (currentUser, userId) => {
     if (!currentUser.possessedSkills || !currentUser.skillsToLearn) return;
@@ -46,6 +49,25 @@ const HomePage = () => {
       }
     });
     setRecommendedUsers(matchedUsers);
+  };
+
+  const handleConnect = async (otherUserId) => {
+    if (!auth.currentUser) return;
+  
+    const currentUserId = auth.currentUser.uid;
+    const chatId = [currentUserId, otherUserId].sort().join("_"); // Unique chat ID
+  
+    const chatRef = doc(db, "chats", chatId);
+    const chatDoc = await getDoc(chatRef);
+  
+    if (!chatDoc.exists()) {
+      await setDoc(chatRef, {
+        users: [currentUserId, otherUserId],
+        createdAt: serverTimestamp(),
+      });
+    }
+  
+    navigate(`/chat/${chatId}`); // Redirect to chat page
   };
 
   const handleLogout = async () => {
@@ -106,7 +128,9 @@ const HomePage = () => {
                     <h3 className="text-lg font-semibold text-teal-300">{user.name}</h3>
                     <p className="text-gray-300">Wants to learn: {user.skillsToLearn?.join(", ") || "Not specified"}</p>
                   </div>
-                  <Button className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">Connect</Button>
+                  <Button onClick={() => handleConnect(user.id)} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">
+                    Connect
+                  </Button>
                 </CardContent>
               </Card>
             ))
