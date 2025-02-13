@@ -57,7 +57,7 @@ const GetStarted = () => {
             navigate('/AdminDashboard');
           }
           else if (userData.isProfileComplete) {
-            navigate('/Dashboard'); // Redirect to Dashboard if profile is complete
+            navigate('/HomePage'); // Redirect to Dashboard if profile is complete
           } else {
             navigate('/ProfileCompletion'); // Redirect to Profile Completion if not complete
           }

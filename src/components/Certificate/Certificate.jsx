@@ -66,7 +66,7 @@ const Certificate = () => {
       await updateDoc(userDocRef, { certificateUrl });
   
       alert('Certificate uploaded successfully!');
-      navigate('/dashboard');
+      navigate('/WaitingPage');
     } catch (error) {
       setUploadError('Error uploading file. Please try again.');
       console.error('Upload Error:', error);

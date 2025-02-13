@@ -6,6 +6,8 @@ import ProfileCompletion from './components/ProfileCompletion/ProfileCompletion'
 import Dashboard from './components/Dashboard/Dashboard';  // Import Dashboard
 import AdminDashboard from './components/AdminDashboard/AdminDashboard';  // Import AdminDashboard
 import Certificate from './components/Certificate/Certificate';  // Import Certificate
+import WaitingPage from './components/WaitingPage/WaitingPage';  // Import WaitingPage
+import HomePage from './components/HomePage/HomePage';  // Import HomePage
 
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
         <Route exact path="/Dashboard" element={<Dashboard />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} /> 
         <Route path="/Certificate" element={<Certificate />} /> 
+        <Route path="/WaitingPage" element={<WaitingPage />} /> 
+        <Route path="/HomePage" element={<HomePage />} /> 
       </Routes>
     </Router>
   );

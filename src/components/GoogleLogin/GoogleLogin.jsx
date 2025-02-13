@@ -20,18 +20,26 @@ const GoogleLogin = () => {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check if the user profile is complete
+      // Reference the user document in Firestore
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
-      if (userDoc.data().role === 'admin') {
-        // If admin, navigate to Admin Dashboard
-        navigate('/AdminDashboard');
-      }
-      else if (userDoc.exists() && userDoc.data().isProfileComplete) {
-        // If profile is completed, navigate to the dashboard
-        navigate('/dashboard');
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const userRole = userData.role || 'user'; // Default to 'user' if the role field doesn't exist
+
+        if (userRole === 'admin') {
+          navigate('/AdminDashboard');
+          return;
+        }
+
+        if (userData.isProfileComplete) {
+          navigate('/HomePage'); // If profile is completed, navigate to dashboard
+        } else {
+          navigate('/ProfileCompletion'); // Otherwise, navigate to profile completion page
+        }
       } else {
-        // Otherwise, navigate to profile completion page
+        // If userDoc does not exist, assume new user and send them to ProfileCompletion
         navigate('/ProfileCompletion');
       }
     } catch (error) {
@@ -55,7 +63,7 @@ const GoogleLogin = () => {
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists() && userDoc.data().isProfileComplete) {
-          navigate('/dashboard'); // Redirect to dashboard if profile is completed
+          navigate('/Homepage'); // Redirect to dashboard if profile is completed
         } else {
           navigate('/ProfileCompletion'); // Redirect to profile completion otherwise
         }
