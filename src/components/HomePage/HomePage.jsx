@@ -76,7 +76,9 @@ const HomePage = () => {
   };
 
   return (
+    
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center">
+      <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">Logout</Button>
       {/* Hero Section */}
       <header className="text-center py-12">
         <h1 className="text-4xl font-bold text-teal-400">Swap Skills, Grow Together</h1>
@@ -86,7 +88,7 @@ const HomePage = () => {
         <div className="mt-6 flex justify-center gap-4">
           <Button className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-teal-600">Get Started</Button>
           <Button variant="outline" className="border-teal-400 text-teal-400 px-6 py-2 rounded-lg hover:bg-teal-500 hover:text-white">Learn More</Button>
-          <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600">Logout</Button>
+          
         </div>
       </header>
 
