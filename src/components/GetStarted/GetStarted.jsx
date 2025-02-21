@@ -27,6 +27,8 @@ const GetStarted = () => {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
+        
+    
 
         // Store additional user information in Firestore
         await setDoc(doc(db, 'users', user.uid), {

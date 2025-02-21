@@ -152,16 +152,7 @@ const ProfileCompletion = () => {
                 />
                 Female
               </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  className="mr-2 accent-teal-500"
-                  value="Other"
-                  checked={gender === 'Other'}
-                  onChange={(e) => setGender(e.target.value)}
-                />
-                Other
-              </label>
+             
             </div>
           </div>
         );

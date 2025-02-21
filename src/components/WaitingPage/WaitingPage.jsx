@@ -48,7 +48,7 @@ const WaitingPage = () => {
         if (userData.approved) {
           setStatus('approved');
           setShowPopup(true);
-          setTimeout(() => navigate('/dashboard'), 4000);
+          setTimeout(() => navigate('/HomePage'), 6000);
         } else if (userData.rejected) {
           setStatus('rejected');
           setShowPopup(true);
