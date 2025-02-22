@@ -1,6 +1,9 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaEnvelope } from "react-icons/fa";
+import ImageSlider from '../../components/imageSlider';
+import Testimonials from '../../components/testimonial';
+
 
 const LandingPage = () => {
     const navigate = useNavigate();
@@ -52,7 +55,7 @@ const LandingPage = () => {
                 </div>
             </main>
             {/* How It Works Section */}
-            <section className="w-10/12 mt-20 px-6 max-w-7xl mx-auto">
+            <section className="w-10/12 mt-20 px-6 max-w-6xl mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
                     {/* Description on the Left */}
                     <div className="space-y-6">
@@ -113,13 +116,10 @@ const LandingPage = () => {
 
 
             {/* About Us Section */}
-            <section className="w-full mt-20 px-6 text-center">
-                <h2 className="text-3xl font-bold">About Us</h2>
-                <p className="mt-4 text-lg max-w-3xl mx-auto">
-                    Skill Swap was founded with the mission to make learning accessible and collaborative. We believe that everyone has something to teach and something to learn. Join us in building a world where knowledge is shared freely.
-                </p>
-            </section>
-
+            
+                <ImageSlider/>
+            
+                <Testimonials/>
 
 
             {/* Contact Us Section */}

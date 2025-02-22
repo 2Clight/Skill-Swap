@@ -8,7 +8,7 @@ export const Card = ({ children, className = "" }) => {
   );
 };
 export const CardContent = ({ children, className = "" }) => {
-    return <div className={`text-gray-300 ${className}`}>{children}</div>;
+    return <div className={`text-gray-100 ${className}`}>{children}</div>;
   };
 
 
