@@ -80,7 +80,7 @@ const ProfileCompletion = () => {
       await setDoc(
         userDocRef,
         {
-          name: user.displayName || 'Anonymous',
+          name: user.name || 'Anonymous',
           email: user.email,
           profileName,
           gender,

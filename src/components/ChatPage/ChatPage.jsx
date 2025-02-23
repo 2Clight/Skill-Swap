@@ -2,7 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebase";
 import { getAuth, signOut } from "firebase/auth";
-import { collection, doc, getDoc, onSnapshot, addDoc, orderBy, query, where, getDocs } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDoc,
+  onSnapshot,
+  addDoc,
+  orderBy,
+  query,
+  where,
+  getDocs,
+  limit,
+} from "firebase/firestore";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 
@@ -12,32 +23,63 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
-  const [usernames, setUsernames] = useState({});
+  const [userDetails, setUserDetails] = useState({});
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(initialChatId);
 
+  const defaultProfile = "/assets/default1.png"; // Accessing from the public folder
+
   useEffect(() => {
     if (!auth.currentUser) return;
-    const q = query(collection(db, "chats"), where("users", "array-contains", auth.currentUser.uid));
-    
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
-      const chatList = await Promise.all(snapshot.docs.map(async (docSnap) => {
-        const chatData = docSnap.data();
-        const otherUserId = chatData.users.find((id) => id !== auth.currentUser.uid);
-        const userDoc = await getDoc(doc(db, "users", otherUserId));
-        return { id: docSnap.id, name: userDoc.exists() ? userDoc.data().name : "Unknown" };
-      }));
+
+    const fetchChatsWithLastMessage = async () => {
+      const q = query(collection(db, "chats"), where("users", "array-contains", auth.currentUser.uid));
+      const chatSnapshot = await getDocs(q);
+
+      const chatList = await Promise.all(
+        chatSnapshot.docs.map(async (chatDoc) => {
+          const chatData = chatDoc.data();
+          const otherUserId = chatData.users.find((id) => id !== auth.currentUser.uid);
+
+          // Fetch other user's info
+          const userDoc = await getDoc(doc(db, "users", otherUserId));
+          const userName = userDoc.exists() ? userDoc.data().name : "Unknown";
+          const userProfilePicture = userDoc.exists() && userDoc.data().profilePictureUrl
+            ? userDoc.data().profilePictureUrl
+            : defaultProfile;
+
+          // Fetch last message in the chat
+          const messagesRef = collection(chatDoc.ref, "messages");
+          const lastMessageQuery = query(messagesRef, orderBy("timestamp", "desc"), limit(1));
+          const lastMessageSnapshot = await getDocs(lastMessageQuery);
+
+          const lastMessage = lastMessageSnapshot.docs.length > 0
+            ? lastMessageSnapshot.docs[0].data().text
+            : "No messages yet";
+
+          return {
+            id: chatDoc.id,
+            name: userName,
+            profilePictureUrl: userProfilePicture,
+            lastMessage,
+          };
+        })
+      );
+
       setChats(chatList);
+
+      // Automatically set the first chat as active if none is selected
       if (!activeChat && chatList.length > 0) {
         setActiveChat(chatList[0].id);
       }
-    });
+    };
 
-    return () => unsubscribe();
+    fetchChatsWithLastMessage();
   }, [auth.currentUser]);
 
   useEffect(() => {
     if (!activeChat) return;
+
     const chatRef = doc(db, "chats", activeChat);
     const messagesRef = collection(chatRef, "messages");
     const q = query(messagesRef, orderBy("timestamp"));
@@ -50,23 +92,28 @@ const ChatPage = () => {
   }, [activeChat]);
 
   useEffect(() => {
-    const fetchUsernames = async () => {
+    const fetchUserDetails = async () => {
       if (!activeChat) return;
+
       const chatRef = doc(db, "chats", activeChat);
       const chatSnap = await getDoc(chatRef);
       if (chatSnap.exists()) {
         const userIds = chatSnap.data().users;
-        const usernamesData = {};
+        const userDetailsData = {};
+
         for (const userId of userIds) {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
-            usernamesData[userId] = userDoc.data().name;
+            userDetailsData[userId] = {
+              name: userDoc.data().name,
+              profilePictureUrl: userDoc.data().profilePictureUrl || defaultProfile,
+            };
           }
         }
-        setUsernames(usernamesData);
+        setUserDetails(userDetailsData);
       }
     };
-    fetchUsernames();
+    fetchUserDetails();
   }, [activeChat]);
 
   const sendMessage = async () => {
@@ -88,9 +135,8 @@ const ChatPage = () => {
   };
 
   return (
-    
     <div className="bg-gray-900 text-white min-h-screen flex">
-        <style>
+      <style>
         {`
           ::-webkit-scrollbar {
             width: 8px;
@@ -98,19 +144,35 @@ const ChatPage = () => {
           ::-webkit-scrollbar-thumb {
             background-color: #ffff;
             border-radius: 4px;
-            
           }
         `}
       </style>
+
       {/* Sidebar for chat list */}
       <div className="w-1/4 bg-gray-800 p-4">
         <h2 className="text-xl font-bold text-teal-400 mb-4">Your Chats</h2>
         {chats.map((chat) => (
-          <div key={chat.id} className={`p-3 cursor-pointer rounded-lg ${activeChat === chat.id ? "bg-teal-500" : "bg-gray-700"}`} onClick={() => setActiveChat(chat.id)}>
-            {chat.name}
+          <div
+            key={chat.id}
+            className={`p-3 cursor-pointer rounded-lg flex items-center gap-3 ${
+              activeChat === chat.id ? "bg-teal-500" : "bg-gray-700"
+            }`}
+            onClick={() => setActiveChat(chat.id)}
+          >
+            <img
+              src={chat.profilePictureUrl}
+              alt={chat.name}
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <p>{chat.name}</p>
+              <p className="text-xs text-gray-400">{chat.lastMessage}</p>
+            </div>
           </div>
         ))}
-        <Button onClick={handleLogout} className="bg-red-500 text-white w-full mt-4">Logout</Button>
+        <Button onClick={handleLogout} className="bg-red-500 text-white w-full mt-4">
+          Logout
+        </Button>
       </div>
 
       {/* Chat Window */}
@@ -122,12 +184,25 @@ const ChatPage = () => {
               return (
                 <div
                   key={msg.id}
-                  className={`p-3 rounded-lg max-w-xs ${
-                    isCurrentUser ? "bg-teal-500 text-white self-end" : "bg-gray-700 text-white self-start"
+                  className={`p-3 rounded-lg max-w-xs flex items-center gap-3 ${
+                    isCurrentUser
+                      ? "bg-teal-500 text-white self-end"
+                      : "bg-gray-700 text-white self-start"
                   }`}
                 >
-                  <p className="text-sm text-gray-300">{usernames[msg.senderId] || "Unknown"}</p>
-                  <p className="text-lg">{msg.text}</p>
+                  {!isCurrentUser && (
+                    <img
+                      src={userDetails[msg.senderId]?.profilePictureUrl}
+                      alt={userDetails[msg.senderId]?.name || "Unknown"}
+                      className="w-8 h-8 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm text-gray-300">
+                      {userDetails[msg.senderId]?.name || "Unknown"}
+                    </p>
+                    <p className="text-lg">{msg.text}</p>
+                  </div>
                 </div>
               );
             })}
@@ -140,7 +215,10 @@ const ChatPage = () => {
               className="flex-1 p-2 rounded-lg bg-gray-700 text-white"
               placeholder="Type a message..."
             />
-            <Button onClick={sendMessage} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">
+            <Button
+              onClick={sendMessage}
+              className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600"
+            >
               Send
             </Button>
           </div>

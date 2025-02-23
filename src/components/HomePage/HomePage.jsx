@@ -30,61 +30,94 @@ const HomePage = () => {
     return () => unsubscribe();
   }, []);
 
+  // Helper function to normalize case
+  const toLowerCaseArray = (arr) => (arr || []).map((item) => item.toLowerCase());
+
   const fetchRecommendedUsers = async (currentUser, userId) => {
     if (!currentUser.possessedSkills || !currentUser.skillsToLearn) return;
 
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("approved", "==", true));
-    const querySnapshot = await getDocs(q);
-    
-    const matchedUsers = [];
-    querySnapshot.forEach((doc) => {
-      const otherUser = doc.data();
-      if (doc.id !== userId) {
-        const mutualMatch = otherUser.possessedSkills.some(skill => currentUser.skillsToLearn.includes(skill)) &&
-                            currentUser.possessedSkills.some(skill => otherUser.skillsToLearn.includes(skill));
-        if (mutualMatch) {
-          matchedUsers.push({ id: doc.id, ...otherUser });
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("approved", "==", true));
+      const querySnapshot = await getDocs(q);
+
+      const currentUserPossessedSkills = toLowerCaseArray(currentUser.possessedSkills);
+      const currentUserSkillsToLearn = toLowerCaseArray(currentUser.skillsToLearn);
+
+      const matchedUsers = [];
+
+      querySnapshot.forEach((doc) => {
+        const otherUser = doc.data();
+        if (doc.id !== userId) {
+          const otherUserPossessedSkills = toLowerCaseArray(otherUser.possessedSkills);
+          const otherUserSkillsToLearn = toLowerCaseArray(otherUser.skillsToLearn);
+
+          // Log for debugging
+          console.log("🔍 Matching Process:");
+          console.log("Current User:", currentUser.profileName);
+          console.log("Skills to Learn (Current User):", currentUserSkillsToLearn);
+          console.log("Possessed Skills (Current User):", currentUserPossessedSkills);
+          console.log("Other User:", otherUser.profileName);
+          console.log("Skills to Learn (Other User):", otherUserSkillsToLearn);
+          console.log("Possessed Skills (Other User):", otherUserPossessedSkills);
+
+          // Check for bidirectional match
+          const mutualMatch =
+            otherUserPossessedSkills.some((skill) => currentUserSkillsToLearn.includes(skill)) &&
+            currentUserPossessedSkills.some((skill) => otherUserSkillsToLearn.includes(skill));
+
+          if (mutualMatch) {
+            matchedUsers.push({ id: doc.id, ...otherUser });
+          }
         }
-      }
-    });
-    setRecommendedUsers(matchedUsers);
+      });
+
+      console.log("✅ Matched Users:", matchedUsers);
+      setRecommendedUsers(matchedUsers);
+    } catch (error) {
+      console.error("Error fetching recommended users:", error);
+    }
   };
 
   const handleConnect = async (otherUserId) => {
     if (!auth.currentUser) return;
-  
+
     const currentUserId = auth.currentUser.uid;
-    const chatId = [currentUserId, otherUserId].sort().join("_"); // Unique chat ID
-  
+    const chatId = [currentUserId, otherUserId].sort().join("_");
+
     const chatRef = doc(db, "chats", chatId);
     const chatDoc = await getDoc(chatRef);
-  
+
     if (!chatDoc.exists()) {
       await setDoc(chatRef, {
         users: [currentUserId, otherUserId],
         createdAt: serverTimestamp(),
       });
     }
-  
-    navigate(`/chat/${chatId}`); // Redirect to chat page
+
+    navigate(`/chat/${chatId}`);
   };
 
-  const handleEdit = () => navigate('/dashboard');
+  const handleEdit = () => navigate("/dashboard");
+
   const handleLogout = async () => {
     await signOut(auth);
-    window.location.href = "/"; // Redirect to homepage after logout
+    window.location.href = "/";
   };
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center">
-      <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">Logout</Button>
+      <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">
+        Logout
+      </Button>
+
       <header className="text-center py-12">
         <h1 className="text-4xl font-bold text-teal-400">Swap Skills, Grow Together</h1>
         <p className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto">
           Skill Swap is the ultimate platform to exchange knowledge, connect with talented individuals, and learn something new.
         </p>
       </header>
+
       {userData && (
         <section className="w-full max-w-4xl p-6">
           <Card className="bg-gray-800 shadow-lg">
@@ -103,11 +136,14 @@ const HomePage = () => {
                   <span className="text-lg font-semibold">{userData.rating || "N/A"}</span>
                 </div>
               </div>
-              <Button onClick={handleEdit} variant="outline" className="border-teal-400 text-teal-400 hover:bg-teal-500 hover:text-white">Edit Profile</Button>
+              <Button onClick={handleEdit} variant="outline" className="border-teal-400 text-teal-400 hover:bg-teal-500 hover:text-white">
+                Edit Profile
+              </Button>
             </CardContent>
           </Card>
         </section>
       )}
+
       <section className="w-full max-w-4xl p-6">
         <h2 className="text-2xl font-bold text-teal-400 mb-6">Find Skill Swap Partners</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -116,7 +152,7 @@ const HomePage = () => {
               <Card key={user.id} className="bg-gray-800 shadow-lg">
                 <CardContent className="flex items-center gap-4 p-6">
                   <img
-                    src={user.profilePictureUrl || "assets/default1.png"}
+                    src={user.profilePictureUrl || "/assets/default1.png"}
                     alt="Profile"
                     className="w-16 h-16 rounded-full object-cover border-2 border-teal-400"
                   />
