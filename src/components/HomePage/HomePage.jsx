@@ -6,6 +6,60 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { motion} from "framer-motion";
+import { Home, Map, Book, MessageCircle } from "lucide-react";
+
+
+
+const Sidebar = () => {
+  const logo = "/assets/logo.png";
+
+  const links = [
+    { icon: Home, label: "Home" },
+    { icon: Map, label: "Location" },
+    { icon: Book, label: "Tutorials" },
+    { icon: MessageCircle, label: "Chat" }
+  ];
+
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.aside
+      className="fixed left-0 top-0 h-full bg-gray-800 text-white flex flex-col items-start p-4 pt-4 space-y-6"
+      initial={{ width: "4rem" }}
+      whileHover={{ width: "12rem" }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+    >
+      <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg">
+        <img src={logo} alt="Skill Swap" className="w-11 h-11 -translate-x-2" />
+        <motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          Skill Swap
+        </motion.span>
+      </div>
+
+      {links.map((link, index) => (
+        <div
+          key={index}
+          className="flex items-center gap-4 cursor-pointer p-2 rounded-lg hover:bg-teal-500/40"
+        >
+          <link.icon size={28} />
+          <motion.span
+            initial={{ opacity: 0 }}
+            animate={{ opacity: isHovered ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {link.label}
+          </motion.span>
+        </div>
+      ))}
+    </motion.aside>
+  );
+};
 
 const HomePage = () => {
   const [userData, setUserData] = useState(null);
@@ -106,12 +160,17 @@ const HomePage = () => {
   };
 
   return (
+    
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center">
+      
+      <Sidebar />
+      
       <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">
         Logout
       </Button>
 
       <header className="text-center py-12">
+      
         <h1 className="text-4xl font-bold text-teal-400">Swap Skills, Grow Together</h1>
         <p className="mt-4 text-lg text-gray-300 max-w-2xl mx-auto">
           Skill Swap is the ultimate platform to exchange knowledge, connect with talented individuals, and learn something new.
