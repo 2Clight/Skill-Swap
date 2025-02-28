@@ -13,12 +13,13 @@ import { Home, Map, Book, MessageCircle } from "lucide-react";
 
 const Sidebar = () => {
   const logo = "/assets/logo.png";
+  const navigate = useNavigate();
 
   const links = [
     { icon: Home, label: "Home" },
-    { icon: Map, label: "Location" },
+    { icon: Map, label: "Explore", path: "/Explore" },
     { icon: Book, label: "Tutorials" },
-    { icon: MessageCircle, label: "Chat" }
+    { icon: MessageCircle, label: "Chat", path:"/ChatPage" }
   ];
 
   const [isHovered, setIsHovered] = useState(false);
@@ -31,7 +32,7 @@ const Sidebar = () => {
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
     >
-      <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg">
+      <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg" onClick={() => navigate("/")}>
         <img src={logo} alt="Skill Swap" className="w-11 h-11 -translate-x-2" />
         <motion.span
           initial={{ opacity: 0 }}
@@ -45,7 +46,7 @@ const Sidebar = () => {
       {links.map((link, index) => (
         <div
           key={index}
-          className="flex items-center gap-4 cursor-pointer p-2 rounded-lg hover:bg-teal-500/40"
+          className="flex items-center gap-4 cursor-pointer p-2 rounded-lg hover:bg-teal-500/40" onClick={() => navigate(link.path)}
         >
           <link.icon size={28} />
           <motion.span

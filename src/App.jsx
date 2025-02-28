@@ -9,6 +9,7 @@ import Certificate from './components/Certificate/Certificate';  // Import Certi
 import WaitingPage from './components/WaitingPage/WaitingPage';  // Import WaitingPage
 import HomePage from './components/HomePage/HomePage';  // Import HomePage
 import ChatPage from './components/ChatPage/ChatPage';  // Import ChatPage
+import Explore from './components/Explore/Explore';  // Import Explore
 
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
         <Route path="/WaitingPage" element={<WaitingPage />} /> 
         <Route path="/HomePage" element={<HomePage />} /> 
         <Route path="//chat/:chatId" element={<ChatPage />} /> 
+        <Route path="/Explore" element={<Explore />} /> 
       </Routes>
     </Router>
   );
