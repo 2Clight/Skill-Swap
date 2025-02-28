@@ -9,6 +9,7 @@ import Certificate from './components/Certificate/Certificate';  // Import Certi
 import WaitingPage from './components/WaitingPage/WaitingPage';  // Import WaitingPage
 import HomePage from './components/HomePage/HomePage';  // Import HomePage
 import ChatPage from './components/ChatPage/ChatPage';  // Import ChatPage
+
 import Explore from './components/Explore/Explore';  // Import Explore
 
 

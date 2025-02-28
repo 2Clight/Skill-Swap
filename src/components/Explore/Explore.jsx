@@ -1,15 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { Button } from "../../components/ui/button";
 import "leaflet/dist/leaflet.css";
 import { db } from "../firebase";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import L from "leaflet";
 import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import Sidebar from "../sidebar";
+import '../custom.css'
 
 const Explore = () => {
   const [userLocations, setUserLocations] = useState([]);
   const [userPosition, setUserPosition] = useState([20, 0]);
   const auth = getAuth();
+  const navigate = useNavigate();
+  
+
+  
+    const handleConnect = async (otherUserId) => {
+      if (!auth.currentUser) return;
+  
+      const currentUserId = auth.currentUser.uid;
+      const chatId = [currentUserId, otherUserId].sort().join("_");
+  
+      const chatRef = doc(db, "chats", chatId);
+      const chatDoc = await getDoc(chatRef);
+  
+      if (!chatDoc.exists()) {
+        await setDoc(chatRef, {
+          users: [currentUserId, otherUserId],
+          createdAt: serverTimestamp(),
+        });
+      }
+  
+      navigate(`/chat/${chatId}`);
+    };
+  
 
   useEffect(() => {
     const fetchUserLocations = async () => {
@@ -86,7 +113,9 @@ const Explore = () => {
 
   return (
     <div className="h-screen w-full">
-      <MapContainer center={userPosition} zoom={12} className="h-full w-full">
+      <Sidebar/>
+      <MapContainer center={userPosition} zoom={12} className="h-full w-full ">
+      
         <PanToUser />
         <TileLayer
           attribution='&copy; <a href="https://www.thunderforest.com/">Thunderforest</a>'
@@ -110,6 +139,9 @@ const Explore = () => {
                 <h3 className="font-semibold">{user.profileName}</h3>
                 <p>{user.country}</p>
                 <p>Skills: {user.possessedSkills?.join(", ") || "N/A"}</p>
+                <Button onClick={() => handleConnect(user.id)} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">
+                                    Connect
+                                  </Button>
               </div>
             </Popup>
           </Marker>

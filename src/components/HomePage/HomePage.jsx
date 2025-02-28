@@ -6,61 +6,7 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { motion} from "framer-motion";
-import { Home, Map, Book, MessageCircle } from "lucide-react";
-
-
-
-const Sidebar = () => {
-  const logo = "/assets/logo.png";
-  const navigate = useNavigate();
-
-  const links = [
-    { icon: Home, label: "Home" },
-    { icon: Map, label: "Explore", path: "/Explore" },
-    { icon: Book, label: "Tutorials" },
-    { icon: MessageCircle, label: "Chat", path:"/ChatPage" }
-  ];
-
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <motion.aside
-      className="fixed left-0 top-0 h-full bg-gray-800 text-white flex flex-col items-start p-4 pt-4 space-y-6"
-      initial={{ width: "4rem" }}
-      whileHover={{ width: "12rem" }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-    >
-      <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg" onClick={() => navigate("/")}>
-        <img src={logo} alt="Skill Swap" className="w-11 h-11 -translate-x-2" />
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovered ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          Skill Swap
-        </motion.span>
-      </div>
-
-      {links.map((link, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-4 cursor-pointer p-2 rounded-lg hover:bg-teal-500/40" onClick={() => navigate(link.path)}
-        >
-          <link.icon size={28} />
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            {link.label}
-          </motion.span>
-        </div>
-      ))}
-    </motion.aside>
-  );
-};
+import Sidebar from "../sidebar";
 
 const HomePage = () => {
   const [userData, setUserData] = useState(null);

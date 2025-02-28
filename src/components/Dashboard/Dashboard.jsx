@@ -4,18 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [profilePicture, setProfilePicture] = useState("/assets/default1.png");
   const [isUploading, setIsUploading] = useState(false);
+  const [skillsData, setSkillsData] = useState([]);
+  const [studentsTaught, setStudentsTaught] = useState(0);
   const navigate = useNavigate();
   const auth = getAuth();
-
-  const CLOUDINARY_UPLOAD_PRESET = 'profile-picture';
-  const CLOUDINARY_CLOUD_NAME = 'dnjlyqvrx';
-  const CLOUDINARY_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/dnjlyqvrx/image/upload';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
@@ -29,60 +28,27 @@ const Dashboard = () => {
             const data = docSnap.data();
             setUserDetails(data);
             setProfilePicture(data.profilePictureUrl || "/assets/default1.png");
+
+            // Process skills progress
+            if (data.skillsProgress) {
+              setSkillsData(Object.entries(data.skillsProgress).map(([date, count]) => ({ date, count })));
+            }
+            setStudentsTaught(data.studentsTaught || 0);
           }
         } catch (error) {
           console.error("Error fetching user details:", error);
         }
       } else {
-        navigate('/'); // Redirect to login if not logged in
+        navigate('/');
       }
     });
 
-    return () => unsubscribe(); // Cleanup on unmount
+    return () => unsubscribe();
   }, [auth, navigate]);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/');
-    } catch (error) {
-      console.error('Error signing out:', error.message);
-    }
-  };
-
-  const handleProfilePictureUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file || !user) return;
-
-    setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-    formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
-
-    try {
-      const response = await fetch(CLOUDINARY_UPLOAD_URL, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (!data.secure_url) throw new Error("Upload failed");
-
-      await setDoc(
-        doc(db, 'users', user.uid),
-        { profilePictureUrl: data.secure_url },
-        { merge: true }
-      );
-
-      setProfilePicture(data.secure_url);
-      setUserDetails((prev) => ({ ...prev, profilePictureUrl: data.secure_url }));
-    } catch (error) {
-      console.error('Error uploading profile picture:', error.message);
-    } finally {
-      setIsUploading(false);
-    }
+    await signOut(auth);
+    navigate('/');
   };
 
   if (!user || !userDetails) {
@@ -105,10 +71,7 @@ const Dashboard = () => {
 
         <div className="flex flex-col items-center mb-6">
           <img src={profilePicture} alt="Profile" className="w-32 h-32 rounded-full object-cover" />
-          <label className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg cursor-pointer hover:bg-teal-400" htmlFor="profilePictureUpload">
-            {isUploading ? 'Uploading...' : 'Upload Profile Picture'}
-          </label>
-          <input id="profilePictureUpload" type="file" accept="image/*" className="hidden" onChange={handleProfilePictureUpload} />
+          <p className="text-lg mt-4 font-semibold text-teal-400">{userDetails.profileName}</p>
         </div>
 
         <div className="mt-4">
@@ -116,33 +79,36 @@ const Dashboard = () => {
         </div>
 
         <div className="space-y-4">
-          <div>
-            <h2 className="text-lg font-semibold text-teal-400">Profile Name:</h2>
-            <p className="text-gray-300">{userDetails.profileName}</p>
+          <h2 className="text-xl font-semibold text-teal-400">Progress Overview</h2>
+          
+          <div className="bg-gray-700 p-4 rounded-lg text-center">
+            <p className="text-lg font-semibold">People Taught</p>
+            <p className="text-3xl font-bold text-teal-400">{studentsTaught}</p>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-teal-400">Gender:</h2>
-            <p className="text-gray-300">{userDetails.gender}</p>
+
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-teal-400">Skills Learned Over Time</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={skillsData}>
+                <XAxis dataKey="date" stroke="#ccc" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#14b8a6" />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-teal-400">Country:</h2>
-            <p className="text-gray-300">{userDetails.country}</p>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-teal-400">Possessed Skills:</h2>
-            <ul className="list-disc ml-6 text-gray-300">
-              {userDetails.possessedSkills.map((skill, index) => (
-                <li key={index}>{skill}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-lg font-semibold text-teal-400">Skills to Learn:</h2>
-            <ul className="list-disc ml-6 text-gray-300">
-              {userDetails.skillsToLearn.map((skill, index) => (
-                <li key={index}>{skill}</li>
-              ))}
-            </ul>
+
+          <div className="bg-gray-700 p-4 rounded-lg">
+            <h3 className="text-lg font-semibold text-teal-400">Overall Progress</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={skillsData}>
+                <XAxis dataKey="date" stroke="#ccc" />
+                <YAxis />
+                <Tooltip />
+                <CartesianGrid stroke="#444" strokeDasharray="3 3" />
+                <Line type="monotone" dataKey="count" stroke="#14b8a6" />
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

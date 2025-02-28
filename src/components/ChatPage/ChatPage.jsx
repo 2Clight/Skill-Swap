@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import Sidebar from "../sidebar";
 
 const ChatPage = () => {
   const { chatId: initialChatId } = useParams();
@@ -136,6 +137,7 @@ const ChatPage = () => {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex">
+      <Sidebar/>
       <style>
         {`
           ::-webkit-scrollbar {
@@ -149,7 +151,8 @@ const ChatPage = () => {
       </style>
 
       {/* Sidebar for chat list */}
-      <div className="w-1/4 bg-gray-800 p-4">
+      <div className="ml-20 w-1/4 bg-gray-800 p-4">
+      
         <h2 className="text-xl font-bold text-teal-400 mb-4">Your Chats</h2>
         {chats.map((chat) => (
           <div
