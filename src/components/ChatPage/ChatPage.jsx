@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import Sidebar from "../sidebar";
+import SideBar from "../SideBar";
 
 const ChatPage = () => {
   const { chatId: initialChatId } = useParams();
@@ -44,7 +44,7 @@ const ChatPage = () => {
 
           // Fetch other user's info
           const userDoc = await getDoc(doc(db, "users", otherUserId));
-          const userName = userDoc.exists() ? userDoc.data().name : "Unknown";
+          const userName = userDoc.exists() ? userDoc.data().profileName : "Unknown";
           const userProfilePicture = userDoc.exists() && userDoc.data().profilePictureUrl
             ? userDoc.data().profilePictureUrl
             : defaultProfile;
@@ -106,7 +106,7 @@ const ChatPage = () => {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
             userDetailsData[userId] = {
-              name: userDoc.data().name,
+              name: userDoc.data().profileName,
               profilePictureUrl: userDoc.data().profilePictureUrl || defaultProfile,
             };
           }
@@ -134,10 +134,41 @@ const ChatPage = () => {
     await signOut(auth);
     navigate("/");
   };
+  // Add this function to handle sending match requests
+  const sendMatchRequest = async () => {
+    if (!activeChat) return;
+  
+    const chatRef = doc(db, "chats", activeChat);
+    const messagesRef = collection(chatRef, "messages");
+  
+    await addDoc(messagesRef, {
+      senderId: auth.currentUser.uid,
+      text: "🔔 Match request sent! Approve or reject below.",
+      timestamp: new Date(),
+      systemMessage: true, // Ensure this is included
+    });
+  };
+  
+const handleMatchResponse = async (response) => {
+  if (!activeChat) return;
+
+  const chatRef = doc(db, "chats", activeChat);
+  const messagesRef = collection(chatRef, "messages");
+
+  await addDoc(messagesRef, {
+    senderId: auth.currentUser.uid,
+    text: response === "approve" ? "✅ Match request approved!" : "❌ Match request rejected.",
+    timestamp: new Date(),
+    systemMessage: true,
+  });
+};
+
+
+
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex">
-      <Sidebar/>
+      <SideBar/>
       <style>
         {`
           ::-webkit-scrollbar {
@@ -151,65 +182,110 @@ const ChatPage = () => {
       </style>
 
       {/* Sidebar for chat list */}
-      <div className="ml-20 w-1/4 bg-gray-800 p-4">
-      
-        <h2 className="text-xl font-bold text-teal-400 mb-4">Your Chats</h2>
-        {chats.map((chat) => (
-          <div
-            key={chat.id}
-            className={`p-3 cursor-pointer rounded-lg flex items-center gap-3 ${
-              activeChat === chat.id ? "bg-teal-500" : "bg-gray-700"
-            }`}
-            onClick={() => setActiveChat(chat.id)}
-          >
-            <img
-              src={chat.profilePictureUrl}
-              alt={chat.name}
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <p>{chat.name}</p>
-              <p className="text-xs text-gray-400">{chat.lastMessage}</p>
-            </div>
-          </div>
-        ))}
-        <Button onClick={handleLogout} className="bg-red-500 text-white w-full mt-4">
-          Logout
-        </Button>
+      <div className="ml-20 w-1/4 bg-gray-800 p-4 flex flex-col h-screen">
+  <h2 className="text-xl font-bold text-teal-400 mb-4">Your Chats</h2>
+
+  <div className="flex-grow overflow-y-auto space-y-3">
+    {chats.map((chat) => (
+      <div
+        key={chat.id}
+        className={`p-3 cursor-pointer rounded-lg flex items-center gap-3 ${
+          activeChat === chat.id ? "bg-teal-500" : "bg-gray-700"
+        }`}
+        onClick={() => setActiveChat(chat.id)}
+      >
+        <img
+          src={chat.profilePictureUrl}
+          alt={chat.name}
+          className="w-10 h-10 rounded-full"
+        />
+        <div>
+          <p>{chat.name}</p>
+          <p className="text-xs text-gray-200">{chat.lastMessage}</p>
+        </div>
       </div>
+    ))}
+  </div>
+
+  <Button onClick={handleLogout} className="bg-red-500 text-white w-full mt-4">
+    Logout
+  </Button>
+</div>
 
       {/* Chat Window */}
       <div className="w-3/4 flex flex-col items-center p-6">
-        <Card className="bg-gray-800 shadow-lg w-full max-w-6xl p-4 flex flex-col">
-          <CardContent className="overflow-y-auto h-[75vh] flex flex-col gap-2 pr-2">
-            {messages.map((msg) => {
-              const isCurrentUser = msg.senderId === auth.currentUser.uid;
-              return (
-                <div
-                  key={msg.id}
-                  className={`p-3 rounded-lg max-w-xs flex items-center gap-3 ${
-                    isCurrentUser
-                      ? "bg-teal-500 text-white self-end"
-                      : "bg-gray-700 text-white self-start"
-                  }`}
+        <Card className="bg-gray-800 shadow-lg w-full max-w-6xl p-4 flex flex-col h-[92vh]">
+        <div className="flex flex-col items-center mb-4 relative">
+  {/* Informational Box */}
+  <div className="bg-gray-700 text-white rounded-lg p-3 w-3/4 text-center shadow-md">
+    <p className="text-sm">
+      <strong>What is a Match Request?</strong><br />
+      Sending a match request notifies the other user that you'd like to officially connect and collaborate. If they accept, you'll become official skill-swap partners!
+    </p>
+  </div>
+
+  {/* Send Match Request Link */}
+  <p
+    onClick={sendMatchRequest}
+    className="text-teal-400 mt-2 text-xs cursor-pointer hover:underline"
+  >
+    Send match request
+  </p>
+</div>
+
+
+<CardContent className="overflow-y-auto h-[75vh] flex flex-col gap-2 pr-2">
+  {messages.map((msg) => {
+    const isCurrentUser = msg.senderId === auth.currentUser.uid;
+
+    return (
+      <div
+        key={msg.id}
+        className={`p-3 rounded-lg max-w-xs flex items-center gap-3 ${
+          isCurrentUser
+            ? "bg-teal-500 text-white self-end"
+            : "bg-gray-700 text-white self-start"
+        }`}
+      >
+        {!isCurrentUser && (
+          <img
+            src={userDetails[msg.senderId]?.profilePictureUrl}
+            alt={userDetails[msg.senderId]?.name || "Unknown"}
+            className="w-8 h-8 rounded-full"
+          />
+        )}
+
+        <div>
+          <p className="text-sm text-gray-300">
+            {userDetails[msg.senderId]?.name || "Unknown"}
+          </p>
+          <p className="text-sm">{msg.text}</p>
+
+          {/* ✅ Approve/Reject Icons - Show only to recipient */}
+          {msg.systemMessage &&
+            msg.text.includes("Match request sent") &&
+            !isCurrentUser && (
+              <div className="flex gap-4 mt-2">
+                <span
+                  onClick={() => handleMatchResponse("approve")}
+                  className="cursor-pointer text-green-400 text-2xl"
                 >
-                  {!isCurrentUser && (
-                    <img
-                      src={userDetails[msg.senderId]?.profilePictureUrl}
-                      alt={userDetails[msg.senderId]?.name || "Unknown"}
-                      className="w-8 h-8 rounded-full"
-                    />
-                  )}
-                  <div>
-                    <p className="text-sm text-gray-300">
-                      {userDetails[msg.senderId]?.name || "Unknown"}
-                    </p>
-                    <p className="text-lg">{msg.text}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
+                  ✅
+                </span>
+                <span
+                  onClick={() => handleMatchResponse("reject")}
+                  className="cursor-pointer text-red-400 text-2xl"
+                >
+                  ❌
+                </span>
+              </div>
+            )}
+        </div>
+      </div>
+    );
+  })}
+</CardContent>
+
           <div className="flex gap-2 mt-4">
             <input
               type="text"

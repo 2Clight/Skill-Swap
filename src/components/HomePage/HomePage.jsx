@@ -6,7 +6,7 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../sidebar";
+import SideBar from "../SideBar";
 
 const HomePage = () => {
   const [userData, setUserData] = useState(null);
@@ -110,7 +110,7 @@ const HomePage = () => {
     
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center">
       
-      <Sidebar />
+      <SideBar />
       
       <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">
         Logout
@@ -129,7 +129,7 @@ const HomePage = () => {
           <Card className="bg-gray-800 shadow-lg">
             <CardContent className="flex flex-col md:flex-row items-center gap-6 p-6">
               <img
-                src={userData.profilePictureUrl || "/default1.png"}
+                src={userData.profilePictureUrl || "/assets/default1.png"}
                 alt="Profile"
                 className="w-24 h-24 rounded-full object-cover border-2 border-teal-400"
               />

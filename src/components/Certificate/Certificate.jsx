@@ -3,6 +3,7 @@ import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { X } from 'lucide-react';
 
 const Certificate = () => {
   const [file, setFile] = useState(null);
@@ -29,42 +30,40 @@ const Certificate = () => {
       setUploadError('Please select a file first.');
       return;
     }
-  
+
     setUploading(true);
     setUploadError('');
-  
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
     formData.append('resource_type', 'auto'); // Allows both images & PDFs
-  
+
     try {
       const response = await fetch(CLOUDINARY_UPLOAD_URL, {
         method: 'POST',
         body: formData,
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error('Cloudinary Error:', errorData);
         throw new Error('Failed to upload to Cloudinary');
       }
-  
+
       const data = await response.json();
-      let certificateUrl = data.secure_url; // Default URL
-  
-      // 🔹 If the uploaded file is a PDF, explicitly request Cloudinary to convert it
+      let certificateUrl = data.secure_url;
+
+      // If the uploaded file is a PDF, convert to PNG for display
       if (file.type === 'application/pdf') {
         const publicId = data.public_id;
-        
-        // Call Cloudinary to convert PDF to PNG explicitly
         certificateUrl = `https://res.cloudinary.com/dnjlyqvrx/image/upload/w_1000,f_png,pg_1/${publicId}`;
       }
-  
-      // Save converted URL to Firestore
+
+      // Save URL to Firestore
       const userDocRef = doc(db, 'users', user.uid);
       await updateDoc(userDocRef, { certificateUrl });
-  
+
       alert('Certificate uploaded successfully!');
       navigate('/WaitingPage');
     } catch (error) {
@@ -74,30 +73,55 @@ const Certificate = () => {
       setUploading(false);
     }
   };
-  
-  
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white px-6">
-      <div className="w-full max-w-lg bg-gray-800 rounded-lg shadow-lg p-6 mt-10">
-        <h1 className="text-2xl font-bold text-teal-400 mb-4">Upload Certificate</h1>
-
-        <input
-          type="file"
-          accept="image/*,application/pdf"
-          onChange={handleFileChange}
-          className="block w-full text-gray-300 mb-4"
-        />
-
-        {uploadError && <p className="text-red-500 text-sm">{uploadError}</p>}
-
-        <button
-          onClick={handleUpload}
-          className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400"
-          disabled={uploading}
-        >
-          {uploading ? 'Uploading...' : 'Upload Certificate'}
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-90 flex justify-center items-center z-50">
+      <div className="bg-gray-800 p-10 rounded-lg text-white relative w-full max-w-xl shadow-xl">
+        
+        {/* Close Button */}
+        <button onClick={() => navigate('/')} className="absolute top-6 right-6 text-gray-400 hover:text-teal-400 transition-colors duration-300">
+          <X size={28} />
         </button>
+
+        {/* Upload Section */}
+        <div className="flex flex-col items-center">
+          <div className="p-8 border-4 border-dashed border-teal-500 rounded-full mb-6 hover:border-teal-400 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-20 h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </div>
+          <p className="text-2xl font-semibold text-teal-400 mb-6">Upload Certificate</p>
+
+          {/* File Input */}
+          <input
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={handleFileChange}
+            className="block w-full text-gray-300 mb-6 cursor-pointer"
+          />
+
+          {/* Error Message */}
+          {uploadError && <p className="text-red-500 text-sm mb-4">{uploadError}</p>}
+
+          {/* Upload Button */}
+          <button
+            onClick={handleUpload}
+            className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400 transition-colors duration-300"
+            disabled={uploading}
+          >
+            {uploading ? 'Uploading...' : 'Upload Certificate'}
+          </button>
+        </div>
+
+        {/* Instructions */}
+        <div className="mt-8 text-gray-300 text-center leading-relaxed">
+         
+          <p className="mt-4">
+            <span className="text-teal-400 font-semibold">Accepted certificates:</span>  
+            Educational degrees, professional licenses, and skill-based certifications in PDF or image format.
+          </p>
+        </div>
+
       </div>
     </div>
   );

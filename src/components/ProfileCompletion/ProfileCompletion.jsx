@@ -94,7 +94,7 @@ const ProfileCompletion = () => {
       );
 
       alert('Profile completed successfully!');
-      navigate('/dashboard'); // Navigate to another page after completion
+      navigate('/Certificate'); // Navigate to another page after completion
     } catch (error) {
       console.error('Error saving profile: ', error.message);
     } finally {

@@ -7,7 +7,7 @@ import { getAuth } from "firebase/auth";
 import { motion} from "framer-motion";
 
 
-const Sidebar = () => {
+const SideBar = () => {
     const logo = "/assets/logo.png";
     const navigate = useNavigate();
    const [chatPath, setChatPath] = useState("/chat");
@@ -33,7 +33,7 @@ const Sidebar = () => {
     const links = [
       { icon: Home, label: "Home", path: "/HomePage" },
       { icon: Map, label: "Explore", path: "/Explore" },
-      { icon: Book, label: "Tutorials", path: "/Tutorials" },
+      { icon: Book, label: "Dashboard", path: "/Dashboard" },
       { icon: MessageCircle, label: "Chat", path: chatPath },
     ];
     const [isHovered, setIsHovered] = useState(false);
@@ -75,4 +75,4 @@ const Sidebar = () => {
       </motion.aside>
     );
   };
-export default Sidebar;
+export default SideBar;
