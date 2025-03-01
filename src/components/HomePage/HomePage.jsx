@@ -7,10 +7,12 @@ import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import SideBar from "../SideBar";
+import UserDetailModal from "../UserDetailModal";
 
 const HomePage = () => {
   const [userData, setUserData] = useState(null);
   const [recommendedUsers, setRecommendedUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null); 
   const auth = getAuth();
   const navigate = useNavigate();
 
@@ -138,13 +140,15 @@ const HomePage = () => {
                 <p className="text-gray-300 mt-2">{userData.possessedSkills?.join(", ") || "Not specified"}</p>
                 <p className="text-gray-300">Wants to learn: {userData.skillsToLearn?.join(", ") || "Not specified"}</p>
                 <div className="flex items-center gap-1 mt-4 text-yellow-400">
-                  <Star className="w-6 h-6" />
-                  <span className="text-lg font-semibold">{userData.rating || "N/A"}</span>
+                <div className="px-5 py-2 rounded-2xl bg-purple-600 text-white font-bold text-lg shadow-md">
+                Programming
+            </div>
                 </div>
               </div>
               <Button onClick={handleEdit} variant="outline" className="border-teal-400 text-teal-400 hover:bg-teal-500 hover:text-white">
                 Edit Profile
               </Button>
+              
             </CardContent>
           </Card>
         </section>
@@ -166,9 +170,12 @@ const HomePage = () => {
                     <h3 className="text-lg font-semibold text-teal-300">{user.profileName}</h3>
                     <p className="text-gray-300">Wants to learn: {user.skillsToLearn?.join(", ") || "Not specified"}</p>
                   </div>
+                  <div className="flex flex-col gap-3 ">
                   <Button onClick={() => handleConnect(user.id)} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">
                     Connect
                   </Button>
+                  <Button className="bg-purple-500  hover:bg-purple-600" onClick={() => setSelectedUser(user)}>Details</Button>
+                  </div>
                 </CardContent>
               </Card>
             ))
@@ -177,6 +184,10 @@ const HomePage = () => {
           )}
         </div>
       </section>
+       {/* User Detail Modal */}
+       {selectedUser && (
+        <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
     </div>
   );
 };

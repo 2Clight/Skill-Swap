@@ -12,11 +12,16 @@ import {
   query,
   where,
   getDocs,
+  updateDoc,
+  setDoc,
+  increment,
+  arrayUnion,
   limit,
 } from "firebase/firestore";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import SideBar from "../SideBar";
+
 
 const ChatPage = () => {
   const { chatId: initialChatId } = useParams();
@@ -149,19 +154,63 @@ const ChatPage = () => {
     });
   };
   
-const handleMatchResponse = async (response) => {
-  if (!activeChat) return;
-
-  const chatRef = doc(db, "chats", activeChat);
-  const messagesRef = collection(chatRef, "messages");
-
-  await addDoc(messagesRef, {
-    senderId: auth.currentUser.uid,
-    text: response === "approve" ? "✅ Match request approved!" : "❌ Match request rejected.",
-    timestamp: new Date(),
-    systemMessage: true,
-  });
-};
+  const handleMatchResponse = async (response) => {
+    if (!activeChat) return;
+  
+    const chatRef = doc(db, "chats", activeChat);
+    const messagesRef = collection(chatRef, "messages");
+    const chatSnap = await getDoc(chatRef);
+  
+    if (!chatSnap.exists()) return;
+  
+    const { users } = chatSnap.data();
+    const otherUserId = users.find((id) => id !== auth.currentUser.uid);
+  
+    // Send match status message
+    await addDoc(messagesRef, {
+      senderId: auth.currentUser.uid,
+      text: response === "approve" ? "✅ Match request approved!" : "❌ Match request rejected.",
+      timestamp: new Date(),
+      systemMessage: true,
+    });
+  
+    if (response === "approve") {
+      // If approved, update both users' matchedUsers field
+      const currentUserRef = doc(db, "users", auth.currentUser.uid);
+      const otherUserRef = doc(db, "users", otherUserId);
+  
+      // Helper function to update matchedUsers and matchedUserIds
+      const updateMatchedUsers = async (userRef, targetUserId) => {
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const userData = userSnap.data();
+  
+          // Check if the other user's ID is already in matchedUserIds
+          const matchedUserIds = userData.matchedUserIds || [];
+  
+          if (!matchedUserIds.includes(targetUserId)) {
+            await updateDoc(userRef, {
+              matchedUsers: (userData.matchedUsers || 0) + 1,
+              matchedUserIds: arrayUnion(targetUserId), // Add other user's ID
+            });
+          }
+        } else {
+          // Create if it doesn't exist and initialize matchedUsers and matchedUserIds
+          await setDoc(userRef, {
+            matchedUsers: 1,
+            matchedUserIds: [targetUserId],
+          }, { merge: true });
+        }
+      };
+  
+      // Update both users
+      await Promise.all([
+        updateMatchedUsers(currentUserRef, otherUserId),
+        updateMatchedUsers(otherUserRef, auth.currentUser.uid),
+      ]);
+    }
+  };
+  
 
 
 

@@ -64,9 +64,13 @@ const SideBar = () => {
           >
             <link.icon size={28} />
             <motion.span
-              initial={{ opacity: 0 }}
-              animate={{ opacity: isHovered ? 1 : 0 }}
+              initial={{ opacity: 0, width: 0 }}
+              animate={{
+                opacity: isHovered ? 1 : 0,
+                width: isHovered ? "auto" : 0,
+              }}
               transition={{ duration: 0.3 }}
+              className="overflow-hidden"
             >
               {link.label}
             </motion.span>

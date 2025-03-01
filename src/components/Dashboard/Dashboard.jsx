@@ -4,19 +4,20 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import SideBar from '../SideBar';
+import RatingModal from '../RatingModal';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
   const [profilePicture, setProfilePicture] = useState("/assets/default1.png");
-  const [skillsData, setSkillsData] = useState([]);
-  const [studentsTaught, setStudentsTaught] = useState(0);
   const [isActive, setIsActive] = useState(false);
   const [selfDescription, setSelfDescription] = useState('');
   const [matchedUsers, setMatchedUsers] = useState(0);
+  const [matchedUserProfiles, setMatchedUserProfiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const navigate = useNavigate();
   const auth = getAuth();
@@ -38,15 +39,21 @@ const Dashboard = () => {
             const data = docSnap.data();
             setUserDetails(data);
             setProfilePicture(data.profilePictureUrl || "/assets/default1.png");
-
             setIsActive(data.active || false);
             setSelfDescription(data.selfDescription || '');
             setMatchedUsers(data.matchedUsers || 0);
 
-            if (data.skillsProgress) {
-              setSkillsData(Object.entries(data.skillsProgress).map(([date, count]) => ({ date, count })));
+            // Fetch matched users' profile pictures
+            if (data.matchedUserIds) {
+              const matchedProfiles = await Promise.all(
+                data.matchedUserIds.map(async (id) => {
+                  const matchedUserRef = doc(db, 'users', id);
+                  const matchedUserSnap = await getDoc(matchedUserRef);
+                  return matchedUserSnap.exists() ? { uid: id, ...matchedUserSnap.data() } : null;
+                })
+              );
+              setMatchedUserProfiles(matchedProfiles.filter(Boolean));
             }
-            setStudentsTaught(data.studentsTaught || 0);
           }
         } catch (error) {
           console.error("Error fetching user details:", error);
@@ -117,6 +124,11 @@ const Dashboard = () => {
     }
   };
 
+  const openRatingModal = (user) => {
+    setSelectedUser(user);
+    setShowRatingModal(true);
+  };
+
   if (!user || !userDetails) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -129,7 +141,7 @@ const Dashboard = () => {
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white px-6">
       <SideBar />
       <div className="w-full max-w-3xl bg-gray-800 rounded-lg shadow-lg p-6">
-        
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-teal-400">Dashboard</h1>
           <button onClick={handleLogout} className="text-sm font-semibold text-gray-300 hover:text-red-400">
@@ -171,28 +183,42 @@ const Dashboard = () => {
             className="w-full mt-2 p-3 rounded-lg bg-gray-700 text-white focus:outline-none"
           />
         </div>
+        <div className="mt-6 mb-4 space-y-4">
+  <h2 className="text-xl font-semibold text-teal-400 mb-4">Users Matched</h2>
+  <p className="text-3xl font-bold text-green-400 ml-2">{matchedUsers}</p>
 
-        <div className="mt-6 space-y-4">
-          <h2 className="text-xl font-semibold text-teal-400">Progress Overview</h2>
-          
-          <div className="bg-gray-700 p-4 rounded-lg text-center">
-            <p className="text-lg font-semibold">Users Matched</p>
-            <p className="text-3xl font-bold text-teal-400">{matchedUsers}</p>
-          </div>
+  <div className="relative mt-4 mb-4 flex items-center">
+    {matchedUserProfiles.map((user, index) => (
+      <img
+        key={user.uid}
+        src={user.profilePictureUrl || "/assets/default1.png"}
+        alt={user.displayName || 'User'}
+        className="ml-2 mt-8 mb-4 w-12 h-12 rounded-full cursor-pointer hover:scale-125 transition-transform duration-300"
+        style={{
+          position: 'absolute',
+          left: `${index * 30}px`, // Adjust the overlap by changing this value
+          zIndex: matchedUserProfiles.length - index, // Ensure correct stacking order
+        }}
+        onClick={() => openRatingModal(user)}
+      />
+    ))}
+  </div>
+</div>
 
-          <div className="bg-gray-700 p-4 rounded-lg text-center">
-            <p className="text-lg font-semibold">People Taught</p>
-            <p className="text-3xl font-bold text-teal-400">{studentsTaught}</p>
-          </div>
-        </div>
 
-        <div className="mt-6">
-          <button onClick={() => navigate('/HomePage')} className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400">
-            Find a Match
-          </button>
-        </div>
+        <button onClick={() => navigate('/HomePage')} className="mt-12 w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400">
+          Find a Match
+        </button>
 
       </div>
+
+      {showRatingModal && (
+        <RatingModal
+          user={selectedUser}
+          onClose={() => setShowRatingModal(false)}
+          currentUserId={user.uid}
+        />
+      )}
     </div>
   );
 };
