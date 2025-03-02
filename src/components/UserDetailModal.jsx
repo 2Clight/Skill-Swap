@@ -172,7 +172,7 @@ const UserDetailModal = ({ user, onClose }) => {
   {languages.length > 0 ? (
     <ul className="list-disc list-inside">
       {languages
-        .split(/[, ]+/) // Split by comma, space, or both
+        .split(/[, ]+/) // Split by comma, space, or both very useful stuff
         .map((lang) => lang.trim()) // Remove any extra whitespace
         .filter((lang) => lang) // Ensure no empty entries
         .map((lang, index) => (

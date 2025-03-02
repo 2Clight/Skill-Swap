@@ -286,54 +286,57 @@ const ChatPage = () => {
 <CardContent className="overflow-y-auto h-[75vh] flex flex-col gap-2 pr-2">
   {messages.map((msg) => {
     const isCurrentUser = msg.senderId === auth.currentUser.uid;
+    const isMatchRequest =
+      msg.systemMessage && msg.text.includes("Match request sent");
 
     return (
-      <div
-        key={msg.id}
-        className={`p-3 rounded-lg max-w-xs flex items-center gap-3 ${
-          isCurrentUser
-            ? "bg-teal-500 text-white self-end"
-            : "bg-gray-700 text-white self-start"
-        }`}
-      >
-        {!isCurrentUser && (
-          <img
-            src={userDetails[msg.senderId]?.profilePictureUrl}
-            alt={userDetails[msg.senderId]?.name || "Unknown"}
-            className="w-8 h-8 rounded-full"
-          />
-        )}
+      <div key={msg.id} className="flex flex-col">
+        {/* Message Bubble */}
+        <div
+          className={`p-3 rounded-lg max-w-xs flex items-center gap-3 ${
+            isCurrentUser
+              ? "bg-teal-500 text-white self-end"
+              : "bg-gray-700 text-white self-start"
+          }`}
+        >
+          {!isCurrentUser && (
+            <img
+              src={userDetails[msg.senderId]?.profilePictureUrl}
+              alt={userDetails[msg.senderId]?.name || "Unknown"}
+              className="w-8 h-8 rounded-full"
+            />
+          )}
 
-        <div>
-          <p className="text-sm text-gray-300">
-            {userDetails[msg.senderId]?.name || "Unknown"}
-          </p>
-          <p className="text-sm">{msg.text}</p>
-
-          {/* ✅ Approve/Reject Icons - Show only to recipient */}
-          {msg.systemMessage &&
-            msg.text.includes("Match request sent") &&
-            !isCurrentUser && (
-              <div className="flex gap-4 mt-2">
-                <span
-                  onClick={() => handleMatchResponse("approve")}
-                  className="cursor-pointer text-green-400 text-2xl"
-                >
-                  ✅
-                </span>
-                <span
-                  onClick={() => handleMatchResponse("reject")}
-                  className="cursor-pointer text-red-400 text-2xl"
-                >
-                  ❌
-                </span>
-              </div>
-            )}
+          <div>
+            <p className="text-sm text-gray-300">
+              {userDetails[msg.senderId]?.name || "Unknown"}
+            </p>
+            <p className="text-sm">{msg.text}</p>
+          </div>
         </div>
+
+        {/* ✅ Approve/Reject Boxes - Below the Request Message */}
+        {!isCurrentUser && isMatchRequest && (
+          <div className="flex gap-4 mt-2 w-full max-w-xs self-start mb-4">
+            <button
+              onClick={() => handleMatchResponse("approve")}
+              className="flex-1 px-4 py-2 rounded-lg bg-opacity-10 bg-white text-green-400 hover:bg-opacity-30 transition duration-300 backdrop-blur-md"
+            >
+              ✅ Approve
+            </button>
+            <button
+              onClick={() => handleMatchResponse("reject")}
+              className="flex-1 px-4 py-2 rounded-lg bg-opacity-10 bg-white text-red-400 hover:bg-opacity-30 transition duration-300 backdrop-blur-md"
+            >
+              ❌ Reject
+            </button>
+          </div>
+        )}
       </div>
     );
   })}
 </CardContent>
+
 
           <div className="flex gap-2 mt-4">
             <input
