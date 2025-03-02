@@ -9,6 +9,7 @@ const ProfileCompletion = () => {
   const [profileName, setProfileName] = useState('');
   const [gender, setGender] = useState('');
   const [country, setCountry] = useState('');
+  const [languages, setLanguages] = useState('');
   const [possessedSkills, setPossessedSkills] = useState([]);
   const [skillsToLearn, setSkillsToLearn] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +47,7 @@ const ProfileCompletion = () => {
           setCountry(data.country || '');
           setPossessedSkills(data.possessedSkills || []);
           setSkillsToLearn(data.skillsToLearn || []);
+          setLanguages(data.languages || '');
         }
       };
       fetchUserData();
@@ -77,10 +79,12 @@ const ProfileCompletion = () => {
 
     try {
       const userDocRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(userDocRef);
+      const userName = docSnap.exists() ? docSnap.data().name : 'Anonymous';
       await setDoc(
         userDocRef,
         {
-          name: user.name || 'Anonymous',
+          name: userName || 'Anonymous',
           email: user.email,
           profileName,
           gender,
@@ -89,6 +93,7 @@ const ProfileCompletion = () => {
           skillsToLearn,
           isProfileComplete: true,
           completedAt: new Date(),
+          languages,
         },
         { merge: true }
       );
@@ -181,6 +186,25 @@ const ProfileCompletion = () => {
       case 4:
         return (
           <div>
+            <h2 className="text-xl font-semibold text-teal-400 mb-4">
+              Enter Languages of Communication
+            </h2>
+            <textarea
+              className="w-full px-4 py-2 border border-teal-400 rounded-lg bg-gray-800 text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              value={languages}
+              onChange={(e) => setLanguages(e.target.value)}
+              placeholder="e.g., English, Spanish, French"
+              rows="3"
+              required
+            ></textarea>
+            <p className="text-sm text-gray-400 mt-2">
+              Enter multiple languages separated by commas.
+            </p>
+          </div>
+        );
+      case 5:
+        return (
+          <div>
             <h2 className="text-xl font-semibold text-teal-400 mb-4">Select Your Skills</h2>
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-teal-300 mb-2">Possessed Skill Set</h3>
@@ -191,11 +215,10 @@ const ProfileCompletion = () => {
                     {category.skills.map((skill) => (
                       <button
                         key={skill}
-                        className={`px-4 py-2 rounded-lg ${
-                          possessedSkills.includes(skill)
+                        className={`px-4 py-2 rounded-lg ${possessedSkills.includes(skill)
                             ? 'bg-teal-500 text-white'
                             : 'bg-gray-700 text-gray-300'
-                        }`}
+                          }`}
                         onClick={() => toggleSkill(skill, 'possessed')}
                       >
                         {skill}
@@ -258,7 +281,7 @@ const ProfileCompletion = () => {
               Previous
             </button>
           )}
-          {step < 4 ? (
+          {step < 5 ? (
             <button
               onClick={handleNext}
               className="ml-auto px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-400"

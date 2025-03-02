@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { Star } from "lucide-react";
 import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../SideBar";
+import SideBar from "../sidebar";
 import UserDetailModal from "../UserDetailModal";
 
 const HomePage = () => {
@@ -129,7 +128,7 @@ const HomePage = () => {
       {userData && (
         <section className="w-full max-w-4xl p-6">
           <Card className="bg-gray-800 shadow-lg">
-            <CardContent className="flex flex-col md:flex-row items-center gap-6 p-6">
+            <CardContent className="flex flex-col md:flex-row items-center gap-6 p-4">
               <img
                 src={userData.profilePictureUrl || "/assets/default1.png"}
                 alt="Profile"
@@ -160,7 +159,7 @@ const HomePage = () => {
           {recommendedUsers.length > 0 ? (
             recommendedUsers.map((user) => (
               <Card key={user.id} className="bg-gray-800 shadow-lg">
-                <CardContent className="flex items-center gap-4 p-6">
+                <CardContent className="flex items-center gap-4 p-4">
                   <img
                     src={user.profilePictureUrl || "/assets/default1.png"}
                     alt="Profile"
@@ -174,7 +173,7 @@ const HomePage = () => {
                   <Button onClick={() => handleConnect(user.id)} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600">
                     Connect
                   </Button>
-                  <Button className="bg-purple-500  hover:bg-purple-600" onClick={() => setSelectedUser(user)}>Details</Button>
+                  <Button variant="secondary"  onClick={() => setSelectedUser(user)}>Details</Button>
                   </div>
                 </CardContent>
               </Card>

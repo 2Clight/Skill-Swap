@@ -1,21 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { doc, collection, getDocs } from "firebase/firestore";
-import { db } from "./firebase";
+import { doc, collection, getDocs, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+
+import { db, auth } from "./firebase";
 import { Button } from "../components/ui/button";
+
+
+import { useNavigate } from "react-router-dom";
+import { getAuth } from "firebase/auth";
+
 
 const UserDetailModal = ({ user, onClose }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
-
+  const navigate = useNavigate();
   if (!user) return null;
 
   const {
     profileName,
     possessedSkills = [],
     skillsToLearn = [],
-    description = "No description available.",
+    selfDescription = "No description available.",
     country = "Unknown",
-    languages = [],
+    languages,
     profilePictureUrl = "/assets/default1.png",
     id: uid,
   } = user;
@@ -63,12 +69,49 @@ const UserDetailModal = ({ user, onClose }) => {
   
     fetchUserRating();
   }, [uid]);
+  const handleConnect = async (otherUserId) => {
+    try {
+      if (!auth.currentUser) {
+        alert("Please log in to connect.");
+        return;
+      }
+  
+      const currentUserId = auth.currentUser.uid;
+      const chatId = [currentUserId, otherUserId].sort().join("_");
+  
+      const chatRef = doc(db, "chats", chatId);
+      const chatDoc = await getDoc(chatRef);
+  
+      // Create a new chat if it doesn't exist
+      if (!chatDoc.exists()) {
+        await setDoc(chatRef, {
+          users: [currentUserId, otherUserId],
+          createdAt: serverTimestamp(),
+        });
+      }
+  
+      // Redirect to the chat page
+      navigate(`/chat/${chatId}`);
+    } catch (error) {
+      console.error("Error connecting with user:", error);
+    }
+  };
+  
   
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-gray-800 text-white p-6 rounded-lg shadow-xl w-full max-w-lg">
-        <div className="flex items-center mb-4">
+      <div className="bg-gray-800 text-white p-6 rounded-lg shadow-xl w-full max-w-lg relative">
+        
+        {/* Close Icon (Top-Right) */}
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-4 right-4 text-white text-2xl hover:text-red-500"
+        >
+          &times;
+        </button>
+         <div className="flex items-center mb-4">
           <img
             src={profilePictureUrl}
             alt={profileName}
@@ -77,7 +120,7 @@ const UserDetailModal = ({ user, onClose }) => {
           <h2 className="text-2xl font-semibold">{profileName}</h2>
         </div>
 
-        <p className="mb-4 text-sm">{description}</p>
+        <p className="mb-4 text-sm">{selfDescription}</p>
 
         <div className="mb-4">
           <h3 className="text-lg text-teal-400 font-semibold mb-2">
@@ -125,9 +168,24 @@ const UserDetailModal = ({ user, onClose }) => {
         </div>
 
         <div className="mb-4">
-          <h3 className="text-lg text-teal-400 font-semibold">Languages:</h3>
-          <p>{languages.length > 0 ? languages.join(", ") : "Not specified"}</p>
-        </div>
+  <h3 className="text-lg text-teal-400 font-semibold">Languages:</h3>
+  {languages.length > 0 ? (
+    <ul className="list-disc list-inside">
+      {languages
+        .split(/[, ]+/) // Split by comma, space, or both
+        .map((lang) => lang.trim()) // Remove any extra whitespace
+        .filter((lang) => lang) // Ensure no empty entries
+        .map((lang, index) => (
+          <li key={index}>
+            {lang.charAt(0).toUpperCase() + lang.slice(1).toLowerCase()}
+          </li>
+        ))}
+    </ul>
+  ) : (
+    <p>Not specified</p>
+  )}
+</div>
+
 
         <div className="mb-4">
           <h3 className="text-lg text-teal-400 font-semibold">Rating:</h3>
@@ -137,13 +195,18 @@ const UserDetailModal = ({ user, onClose }) => {
             <p>No ratings yet</p>
           )}
         </div>
-
-        <Button
-          onClick={onClose}
-          className="bg-red-500 hover:bg-red-600 text-white mt-4"
-        >
-          Close
-        </Button>
+<div className="flex gap-4">
+  
+          <Button
+            onClick={onClose} variant="red1"
+            className="bg-red-500 hover:bg-red-600 text-white mt-4"
+          >
+            Close
+          </Button>
+          <Button onClick={() => handleConnect(uid)} className="bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 mt-4">
+                              Connect
+                            </Button>
+</div>
       </div>
     </div>
   );

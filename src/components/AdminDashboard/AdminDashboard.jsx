@@ -95,7 +95,7 @@ const AdminDashboard = () => {
               <tbody>
                 {users.filter(user => !user.approved).map(user => (
                   <tr key={user.id} className="hover:bg-gray-800">
-                    <td className="p-2 border-b border-gray-700">{user.profileName || 'N/A'}</td>
+                    <td className="p-2 border-b border-gray-700">{user.name || 'N/A'}</td>
                     <td className="p-2 border-b border-gray-700">{user.email}</td>
                     <td className="p-2 border-b border-gray-700">
                       {user.certificateUrl ? (

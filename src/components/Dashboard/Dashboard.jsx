@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import SideBar from '../SideBar';
+import SideBar from '../sidebar';
 import RatingModal from '../RatingModal';
 
 const Dashboard = () => {
