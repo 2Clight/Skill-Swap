@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import SideBar from '../sidebar';
+import SideBar from '../SideBar';
 import RatingModal from '../RatingModal';
 
 const Dashboard = () => {
@@ -185,7 +185,7 @@ const Dashboard = () => {
         </div>
         <div className="mt-6 mb-4 space-y-4">
   <h2 className="text-xl font-semibold text-teal-400 mb-4">Users Matched</h2>
-  <p className="text-3xl font-bold text-green-400 ml-2">{matchedUsers}</p>
+  <p className="text-3xl font-bold text-green-400 ml-2">{matchedUsers.length}</p>
 
   <div className="relative mt-4 mb-4 flex items-center">
     {matchedUserProfiles.map((user, index) => (

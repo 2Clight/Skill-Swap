@@ -5,7 +5,7 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../sidebar";
+import SideBar from "../SideBar";
 import UserDetailModal from "../UserDetailModal";
 
 const HomePage = () => {
