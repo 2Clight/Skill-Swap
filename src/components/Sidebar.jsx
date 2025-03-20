@@ -7,7 +7,7 @@ import { getAuth } from "firebase/auth";
 import { motion} from "framer-motion";
 
 
-const SideBar = () => {
+const Sidebar = () => {
     const logo = "/assets/logo.png";
     const navigate = useNavigate();
    const [chatPath, setChatPath] = useState("/chat");
@@ -79,4 +79,4 @@ const SideBar = () => {
       </motion.aside>
     );
   };
-export default SideBar;
+export default Sidebar;

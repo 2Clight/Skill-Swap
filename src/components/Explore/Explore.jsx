@@ -7,7 +7,7 @@ import { doc, getDoc, setDoc, updateDoc, collection, query, where, getDocs, serv
 import L from "leaflet";
 import { getAuth } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import Sidebar from "../SideBar";
+import Sidebar from "../Sidebar";
 import '../custom.css'
 
 const Explore = () => {

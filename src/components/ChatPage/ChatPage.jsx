@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import SideBar from "../SideBar";
+import Sidebar from "../Sidebar";
 
 
 const ChatPage = () => {
@@ -217,7 +217,7 @@ const ChatPage = () => {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen flex">
-      <SideBar/>
+      <Sidebar/>
       <style>
         {`
           ::-webkit-scrollbar {

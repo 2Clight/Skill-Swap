@@ -5,7 +5,7 @@ import { getAuth, signOut, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebase";
 import { doc, getDoc, setDoc, collection, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import SideBar from "../SideBar";
+import Sidebar from "../Sidebar";
 import UserDetailModal from "../UserDetailModal";
 
 const HomePage = () => {
@@ -111,7 +111,7 @@ const HomePage = () => {
     
     <div className="bg-gray-900 text-white min-h-screen flex flex-col items-center">
       
-      <SideBar />
+      <Sidebar />
       
       <Button onClick={handleLogout} className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 self-end mr-4 mt-4">
         Logout

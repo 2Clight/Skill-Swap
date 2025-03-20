@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Link } from 'react-router-dom';
-import SideBar from '../SideBar';
+import Sidebar from '../Sidebar';
 import RatingModal from '../RatingModal';
 
 const Dashboard = () => {
@@ -139,7 +139,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white px-6">
-      <SideBar />
+      <Sidebar />
       <div className="w-full max-w-3xl bg-gray-800 rounded-lg shadow-lg p-6">
 
         <div className="flex justify-between items-center mb-6">
