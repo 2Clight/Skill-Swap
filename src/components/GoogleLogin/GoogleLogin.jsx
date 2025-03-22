@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { FcGoogle } from "react-icons/fc";
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const GoogleLogin = () => {
@@ -10,7 +10,7 @@ const GoogleLogin = () => {
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
-    if (loading) return; // Prevent multiple clicks
+    if (loading) return;
     setLoading(true);
 
     const auth = getAuth();
@@ -24,22 +24,29 @@ const GoogleLogin = () => {
       const userDocRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userDocRef);
 
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        const userRole = userData.role || 'user'; // Default to 'user' if the role field doesn't exist
+      if (!userDoc.exists()) {
+        // If user does not exist, create a new document with their name
+        await setDoc(userDocRef, {
+          name: user.displayName,  // Set name from Google profile
+          email: user.email,
+          profilePictureUrl: user.photoURL || "", // Save profile picture if available
+          isProfileComplete: false, // Default to false for new users
+          createdAt: new Date(),
+        });
+      }
 
-        if (userRole === 'admin') {
-          navigate('/AdminDashboard');
-          return;
-        }
+      // Fetch user data after ensuring document exists
+      const userData = (await getDoc(userDocRef)).data();
+      const userRole = userData.role || 'user';
 
-        if (userData.isProfileComplete) {
-          navigate('/HomePage'); // If profile is completed, navigate to dashboard
-        } else {
-          navigate('/ProfileCompletion'); // Otherwise, navigate to profile completion page
-        }
+      if (userRole === 'admin') {
+        navigate('/AdminDashboard');
+        return;
+      }
+
+      if (userData.isProfileComplete) {
+        navigate('/HomePage');
       } else {
-        // If userDoc does not exist, assume new user and send them to ProfileCompletion
         navigate('/ProfileCompletion');
       }
     } catch (error) {
@@ -56,16 +63,15 @@ const GoogleLogin = () => {
     const auth = getAuth();
     const user = auth.currentUser;
 
-    // If user is already logged in, check profile completion
     const checkProfileCompletion = async () => {
       if (user) {
         const userDocRef = doc(db, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists() && userDoc.data().isProfileComplete) {
-          navigate('/Homepage'); // Redirect to dashboard if profile is completed
+          navigate('/Homepage');
         } else {
-          navigate('/ProfileCompletion'); // Redirect to profile completion otherwise
+          navigate('/ProfileCompletion');
         }
       }
     };

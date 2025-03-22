@@ -152,7 +152,7 @@ const Dashboard = () => {
         <div className="flex flex-col items-center mb-6">
           <img src={profilePicture} alt="Profile" className="w-32 h-32 rounded-full object-cover" />
           <label className="mt-4 px-4 py-2 bg-teal-500 text-white rounded-lg cursor-pointer hover:bg-teal-400" htmlFor="profilePictureUpload">
-            {isUploading ? 'Uploading...' : 'Upload Profile Picture'}
+            {isUploading ? 'Uploading...' : 'Change Profile Picture'}
           </label>
           <input id="profilePictureUpload" type="file" accept="image/*" className="hidden" onChange={handleProfilePictureUpload} />
         </div>
@@ -184,8 +184,8 @@ const Dashboard = () => {
           />
         </div>
         <div className="mt-6 mb-4 space-y-4">
-  <h2 className="text-xl font-semibold text-teal-400 mb-4">Users Matched</h2>
-  <p className="text-3xl font-bold text-green-400 ml-2">{matchedUsers.length}</p>
+  <h2 className="text-xl font-semibold text-teal-400 mb-8">Users Matched</h2>
+  <p className="text-3xl font-bold text-green-400 ml-2">{matchedUsers}</p>
 
   <div className="relative mt-4 mb-4 flex items-center">
     {matchedUserProfiles.map((user, index) => (

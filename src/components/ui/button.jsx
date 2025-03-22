@@ -12,6 +12,7 @@ export const Button = ({ children, variant = "default", className = "", ...props
   red3: "bg-red-600 text-white hover:bg-red-700",
   red4: "bg-red-700 text-white hover:bg-red-800",
   red5: "bg-red-800 text-white hover:bg-red-900",
+  neutral: "border border-teal-400 text-teal-400 hover:bg-gray-200 hover:text-black",
   };
 
   return (

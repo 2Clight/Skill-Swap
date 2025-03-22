@@ -53,6 +53,7 @@ const ChatPage = () => {
           const userProfilePicture = userDoc.exists() && userDoc.data().profilePictureUrl
             ? userDoc.data().profilePictureUrl
             : defaultProfile;
+          const isFullyBooked = userDoc.exists() && (userDoc.data().matchedUsers || 0) >= 2;
 
           // Fetch last message in the chat
           const messagesRef = collection(chatDoc.ref, "messages");
@@ -68,6 +69,7 @@ const ChatPage = () => {
             name: userName,
             profilePictureUrl: userProfilePicture,
             lastMessage,
+            isFullyBooked,
           };
         })
       );
@@ -249,8 +251,15 @@ const ChatPage = () => {
           className="w-10 h-10 rounded-full"
         />
         <div>
-          <p>{chat.name}</p>
-          <p className="text-xs text-gray-200">{chat.lastMessage}</p>
+        <p className="flex items-center">
+          {chat.name} 
+          {chat.isFullyBooked && (
+            <span className="ml-2 text-[8px] bg-red-500 text-white px-2 py-[1px] rounded-full">
+              Fully Booked
+            </span>
+          )}
+        </p>
+        <p className="text-xs text-gray-200">{chat.lastMessage}</p>
         </div>
       </div>
     ))}
