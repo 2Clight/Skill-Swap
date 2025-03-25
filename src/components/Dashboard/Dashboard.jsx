@@ -15,9 +15,12 @@ const Dashboard = () => {
   const [selfDescription, setSelfDescription] = useState('');
   const [matchedUsers, setMatchedUsers] = useState(0);
   const [matchedUserProfiles, setMatchedUserProfiles] = useState([]);
+  const [verifiedSkills, setVerifiedSkills] = useState({});
   const [isUploading, setIsUploading] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [uploadModalSkill, setUploadModalSkill] = useState(null);
+  const [certificateFile, setCertificateFile] = useState(null);
 
   const navigate = useNavigate();
   const auth = getAuth();
@@ -42,6 +45,7 @@ const Dashboard = () => {
             setIsActive(data.active || false);
             setSelfDescription(data.selfDescription || '');
             setMatchedUsers(data.matchedUsers || 0);
+            setVerifiedSkills(data.verifiedSkills || {});
 
             // Fetch matched users' profile pictures
             if (data.matchedUserIds) {
@@ -136,6 +140,41 @@ const Dashboard = () => {
       </div>
     );
   }
+  const handleCertificateUpload = async () => {
+    if (!certificateFile || !uploadModalSkill || !user) return;
+
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append('file', certificateFile);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('cloud_name', CLOUDINARY_CLOUD_NAME);
+
+    try {
+      const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (!data.secure_url) throw new Error("Upload failed");
+
+      // Update Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        [`certificates.${uploadModalSkill}`]: { url: data.secure_url, status: 'pending' },
+        [`verifiedSkills.${uploadModalSkill}`]: false // Mark as unverified until admin approval
+      });
+
+      setVerifiedSkills((prev) => ({ ...prev, [uploadModalSkill]: false }));
+      setUploadModalSkill(null);
+      setCertificateFile(null);
+    } catch (error) {
+      console.error('Error uploading certificate:', error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white px-6">
@@ -157,9 +196,61 @@ const Dashboard = () => {
           <input id="profilePictureUpload" type="file" accept="image/*" className="hidden" onChange={handleProfilePictureUpload} />
         </div>
 
-        <div className="mt-4">
-          <Link to="/certificate" className="text-teal-400 hover:underline">Upload Certificate</Link>
+        <div className="mt-8">
+          <h2 className="text-xl font-semibold text-teal-400 mb-4">Verified Skills</h2>
+          <div className="space-y-2">
+            {Object.keys(verifiedSkills).length > 0 ? (
+              Object.entries(verifiedSkills).map(([skill, isVerified]) => (
+                <div key={skill} className="flex justify-between items-center bg-gray-700 p-2 rounded-lg">
+                  <span className="text-white">{skill}</span>
+                  <span className={`text-sm font-bold px-2 py-1 rounded-lg ${isVerified ? 'bg-green-500' : 'bg-red-500'}`}>
+                    {isVerified ? 'Verified' : 'Not Verified'}
+                  </span>
+                  {!isVerified && (
+                    <button
+                      onClick={() => setUploadModalSkill(skill)}
+                      className="bg-teal-500 px-3 py-1 rounded-lg text-white text-sm hover:bg-teal-400"
+                    >
+                      Upload Certificate
+                    </button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-400">No skills added yet.</p>
+            )}
+          </div>
         </div>
+
+        {/* Certificate Upload Modal */}
+        {uploadModalSkill && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-center">
+              <h2 className="text-xl font-semibold text-white mb-4">
+                Upload Certificate for {uploadModalSkill}
+              </h2>
+              <input
+                type="file"
+                accept="image/*,application/pdf"
+                onChange={(e) => setCertificateFile(e.target.files[0])}
+                className="mb-4 text-white"
+              />
+              <button
+                onClick={handleCertificateUpload}
+                disabled={isUploading}
+                className="bg-teal-500 px-4 py-2 rounded-lg text-white hover:bg-teal-400"
+              >
+                {isUploading ? 'Uploading...' : 'Upload'}
+              </button>
+              <button
+                onClick={() => setUploadModalSkill(null)}
+                className="ml-4 text-red-400"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="mt-6">
           <label className="flex items-center gap-3">
