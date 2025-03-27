@@ -40,9 +40,14 @@ const Dashboard = () => {
 
           if (docSnap.exists()) {
             const data = docSnap.data();
+
+            if (data.active === undefined) {
+              await updateDoc(userDocRef, { active: true });
+            }
+            
             setUserDetails(data);
             setProfilePicture(data.profilePictureUrl || "/assets/default1.png");
-            setIsActive(data.active || false);
+            setIsActive(data.active ?? true);
             setSelfDescription(data.selfDescription || '');
             setMatchedUsers(data.matchedUsers || 0);
             setVerifiedSkills(data.verifiedSkills || {});
@@ -253,7 +258,7 @@ const Dashboard = () => {
         )}
 
         <div className="mt-6">
-          <label className="flex items-center gap-3">
+          <label className="flex items-center gap-3" title="Should be kept ON to get match requests">
             <input
               type="checkbox"
               checked={isActive}

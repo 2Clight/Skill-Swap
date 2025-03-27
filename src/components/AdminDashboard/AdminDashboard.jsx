@@ -91,7 +91,7 @@ const AdminDashboard = () => {
             if (certData.status === 'pending') {
               pendingRequests.push({
                 userId: userDoc.id,
-                username: userData.username || "Unknown",
+                username: userData.name || "Unknown",
                 email: userData.email || "No Email",
                 skill,
                 certificateUrl: certData.url,
