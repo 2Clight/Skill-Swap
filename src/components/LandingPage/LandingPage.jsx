@@ -4,11 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail } from "lucide-react";
 import { Button } from '../ui/button';
 import HowItWorksSection from '../HowItWorksSection';
+import Loader from '../Loader';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('hero');
+    const [loading, setLoading] = useState(true);
 
+useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000); // 1s delay
+    return () => clearTimeout(timer);
+  }, []);
+  
   useEffect(() => {
     const sections = ['hero', 'how-it-works', 'features', 'image-slider', 'testimonials', 'contact'];
 
@@ -46,7 +53,7 @@ const LandingPage = () => {
       setActiveSection(sectionId);
     }
   };
-
+ 
   // Using refs for animations
   const fadeInRef = React.useRef(null);
   const fadeInUpRef = React.useRef(null);
@@ -99,6 +106,7 @@ const LandingPage = () => {
       observer.observe(element);
     });
   }, []);
+  if (loading) return <Loader />;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-dark text-white">
