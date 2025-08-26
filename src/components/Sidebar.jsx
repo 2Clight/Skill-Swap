@@ -46,7 +46,7 @@ const Sidebar = () => {
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
       >
-        <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg" onClick={() => navigate("/")}>
+        <div className="flex items-center gap-4 cursor-pointer p-2 rounded-lg" onClick={() => navigate("/HomePage")}>
           <img src={logo} alt="Skill Swap" className="w-11 h-11 -translate-x-2" />
           <motion.span
             initial={{ opacity: 0 }}

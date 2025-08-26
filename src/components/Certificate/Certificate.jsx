@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 
@@ -9,6 +9,8 @@ const Certificate = () => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [skills, setSkills] = useState([]);
+  const [selectedSkill, setSelectedSkill] = useState('');
   const navigate = useNavigate();
   const auth = getAuth();
   const user = auth.currentUser;
@@ -21,13 +23,27 @@ const Certificate = () => {
     navigate('/');
   }
 
+  useEffect(() => {
+    const fetchSkills = async () => {
+      const userDocRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        setSkills(userData.possessedSkills || []);
+      }
+    };
+
+    fetchSkills();
+  }, [user]);
+
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
 
   const handleUpload = async () => {
-    if (!file) {
-      setUploadError('Please select a file first.');
+    if (!file || !selectedSkill) {
+      setUploadError('Please select a skill and upload a file.');
       return;
     }
 
@@ -46,26 +62,46 @@ const Certificate = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Cloudinary Error:', errorData);
         throw new Error('Failed to upload to Cloudinary');
       }
 
       const data = await response.json();
       let certificateUrl = data.secure_url;
 
-      // If the uploaded file is a PDF, convert to PNG for display
+      // Convert PDF to PNG for display
       if (file.type === 'application/pdf') {
         const publicId = data.public_id;
         certificateUrl = `https://res.cloudinary.com/dnjlyqvrx/image/upload/w_1000,f_png,pg_1/${publicId}`;
       }
 
-      // Save URL to Firestore
+      // Update Firestore
       const userDocRef = doc(db, 'users', user.uid);
-      await updateDoc(userDocRef, { certificateUrl });
+      const userSnap = await getDoc(userDocRef);
 
-      alert('Certificate uploaded successfully!');
-      navigate('/WaitingPage');
+      if (userSnap.exists()) {
+        const userData = userSnap.data();
+        let verifiedSkills = userData.verifiedSkills || {};
+        let certificates = userData.certificates || {}; // Store multiple certificates
+
+        // If `verifiedSkills` is empty, initialize all skills to false
+        if (Object.keys(verifiedSkills).length === 0) {
+          verifiedSkills = Object.fromEntries(skills.map(skill => [skill, false]));
+        }
+
+        // Mark the uploaded skill as "pending verification"
+        verifiedSkills[selectedSkill] = false; // Admin will approve later
+
+        // Store the uploaded certificate under the specific skill
+        certificates[selectedSkill] = certificateUrl;
+
+        await updateDoc(userDocRef, {
+          certificates, // Store certificates as a map
+          verifiedSkills,
+        });
+
+        alert(`Certificate for ${selectedSkill} uploaded successfully!`);
+        navigate('/WaitingPage');
+      }
     } catch (error) {
       setUploadError('Error uploading file. Please try again.');
       console.error('Upload Error:', error);
@@ -92,6 +128,18 @@ const Certificate = () => {
           </div>
           <p className="text-2xl font-semibold text-teal-400 mb-6">Upload Certificate</p>
 
+          {/* Skill Selection Dropdown */}
+          <select
+            value={selectedSkill}
+            onChange={(e) => setSelectedSkill(e.target.value)}
+            className="w-full p-2 mb-4 bg-gray-700 text-white rounded-lg focus:outline-none"
+          >
+            <option value="">Select Skill</option>
+            {skills.map((skill, index) => (
+              <option key={index} value={skill}>{skill}</option>
+            ))}
+          </select>
+
           {/* File Input */}
           <input
             type="file"
@@ -115,13 +163,11 @@ const Certificate = () => {
 
         {/* Instructions */}
         <div className="mt-8 text-gray-300 text-center leading-relaxed">
-         
           <p className="mt-4">
             <span className="text-teal-400 font-semibold">Accepted certificates:</span>  
             Educational degrees, professional licenses, and skill-based certifications in PDF or image format.
           </p>
         </div>
-
       </div>
     </div>
   );

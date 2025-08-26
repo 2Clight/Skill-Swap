@@ -13,10 +13,13 @@ const UserDetailModal = ({ user, onClose }) => {
   const [averageRating, setAverageRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const navigate = useNavigate();
+  const [isOnline, setIsOnline] = useState(false);
+
   if (!user) return null;
 
   const {
     profileName,
+    verifiedSkills = [],
     possessedSkills = [],
     skillsToLearn = [],
     selfDescription = "No description available.",
@@ -25,6 +28,23 @@ const UserDetailModal = ({ user, onClose }) => {
     profilePictureUrl = "/assets/default1.png",
     id: uid,
   } = user;
+
+  useEffect(() => {
+    const fetchActivityStatus = async () => {
+      if (!uid) return;
+      try {
+        const userDoc = await getDoc(doc(db, "users", uid));
+        if (userDoc.exists()) {
+          setIsOnline(userDoc.data().active || false);
+        }
+      } catch (error) {
+        console.error("Error fetching activity status:", error);
+      }
+    };
+
+    fetchActivityStatus();
+  }, [uid]);
+
 
   useEffect(() => {
     console.log("User object received:", user);
@@ -118,28 +138,31 @@ const UserDetailModal = ({ user, onClose }) => {
             className="w-16 h-16 rounded-full mr-4"
           />
           <h2 className="text-2xl font-semibold">{profileName}</h2>
+          <p className={isOnline ? "text-green-400 text-xs" : "text-gray-400 text-xs"}>
+              {isOnline ? "Online" : "Offline"}
+            </p>
         </div>
 
         <p className="mb-4 text-sm">{selfDescription}</p>
 
         <div className="mb-4">
           <h3 className="text-lg text-teal-400 font-semibold mb-2">
-            Skills Possessed:
+            Skills verified:
           </h3>
           <div className="flex flex-wrap gap-2">
-            {possessedSkills.length > 0 ? (
-              possessedSkills.map((skill, index) => (
-                <span
-                  key={index}
-                  className="bg-teal-500 px-3 py-1 rounded-lg text-sm"
-                >
-                  {skill}
-                </span>
-              ))
-            ) : (
-              <p>No skills listed.</p>
-            )}
-          </div>
+  {Object.keys(verifiedSkills).filter(skill => verifiedSkills[skill]).length > 0 ? (
+    Object.keys(verifiedSkills)
+      .filter(skill => verifiedSkills[skill]) // Get only verified skills
+      .map((skill, index) => (
+        <span key={index} className="bg-teal-500 px-3 py-1 rounded-lg text-sm">
+          {skill}
+        </span>
+      ))
+  ) : (
+    <p>No skills listed.</p>
+  )}
+</div>
+
         </div>
 
         <div className="mb-4">

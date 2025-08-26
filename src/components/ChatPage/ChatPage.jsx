@@ -22,6 +22,8 @@ import { Card, CardContent } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import Sidebar from "../Sidebar";
 
+import { motion } from "framer-motion";
+
 
 const ChatPage = () => {
   const { chatId: initialChatId } = useParams();
@@ -34,7 +36,7 @@ const ChatPage = () => {
   const [activeChat, setActiveChat] = useState(initialChatId);
 
   const defaultProfile = "/assets/default1.png"; // Accessing from the public folder
-
+  const [showPopup, setShowPopup] = useState(false);
   useEffect(() => {
     if (!auth.currentUser) return;
 
@@ -146,13 +148,28 @@ const ChatPage = () => {
     if (!activeChat) return;
   
     const chatRef = doc(db, "chats", activeChat);
+    const chatSnap = await getDoc(chatRef);
+
+    if (!chatSnap.exists()) return;
+
+    const chatData = chatSnap.data();
     const messagesRef = collection(chatRef, "messages");
+
+    if (chatData.matchRequestSent) {
+      // Prevent spam - show popup
+      setShowPopup(true);
+      setTimeout(() => setShowPopup(false), 3000); // Hide after 4 sec
+      return;
+    }
   
     await addDoc(messagesRef, {
       senderId: auth.currentUser.uid,
       text: "🔔 Match request sent! Approve or reject below.",
       timestamp: new Date(),
       systemMessage: true, // Ensure this is included
+    });
+    await updateDoc(chatRef, {
+      matchRequestSent: true,
     });
   };
   
@@ -234,6 +251,16 @@ const ChatPage = () => {
 
       {/* Sidebar for chat list */}
       <div className="ml-20 w-1/4 bg-gray-800 p-4 flex flex-col h-screen">
+      {showPopup && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+          className="fixed top-10 right-0 transform -translate-x-1/2 bg-red-500 text-white p-4 z-10 rounded-lg shadow-lg"
+        >
+          🚫 Match Request Already Sent!
+        </motion.div>
+      )}
   <h2 className="text-xl font-bold text-teal-400 mb-4">Your Chats</h2>
 
   <div className="flex-grow overflow-y-auto space-y-3">
